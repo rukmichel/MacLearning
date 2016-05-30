@@ -1,0 +1,18 @@
+
+#Steps to work through proxy and nltk instalation:
+
+1. Open windows cmd
+	-  set http_proxy=http://proxy.nl.logica.com:3128
+	-  set https_proxy=https://proxy.nl.logica.com:3128
+2. type: 
+	- Ipython
+	- import nltk
+	- nltk.download() -> nltk downloader windows will pop up
+	- download stopwords module and words module.
+
+#Steps to work through proxy on git:
+	- git config --global http.proxy https://proxy.nl.logica.com:3128
+	- Our current project remote folder is: https://github.com/rukmichel/MacLearning.git
+
+# working with remote directory
+	- git clone https://github.com/rukmichel/MacLearning.git
