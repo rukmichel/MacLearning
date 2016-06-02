@@ -77,11 +77,12 @@ for this_path in full_file_paths:
  #           worddoc.Visible = 0
             worddoc=wordapp.Documents.Open(this_path, False, False, False)
             get_doc_properties(worddoc)
-            textdoc=worddoc.Content.Text      
-            vectorize_document(textdoc)
+            textdoc=worddoc.Content.Text   
+            print(textdoc)
+#            vectorize_document(textdoc)
             files_processed.append(this_path)
             worddoc.Close()
-            
+           
         
         
 if len(get_files_processed()) > 0:
