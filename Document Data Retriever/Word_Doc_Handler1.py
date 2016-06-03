@@ -9,6 +9,8 @@ import os
 #import hashlib
 import docx
 
+import csv
+
 class fileHandler_Error(Exception):
     """"
     Application error
@@ -83,7 +85,7 @@ class wordDocumentWrapper(fileHandler):
         super().__init__(path = path) # the same constractor as the parent class
     
     
-    def _split_File_(self, path,destinationFolder):
+    def __split_File__(self, path,destinationFolder):
         """
         this splite the cv in two version english and dutch
         """       
@@ -150,10 +152,10 @@ class wordDocumentWrapper(fileHandler):
                     tempDoc = wordApp.Documents.Add(Template= this_path) # get exactly the copy of the file
                     new_path = this_path.replace('.doc', '.docx')
                     tempDoc.SaveAs(new_path )
-                    self._split_File_(new_path,destinationFolder) # this split a file and save in two versions(english and dutch)
+                    self.__split_File__(new_path,destinationFolder) # this split a file and save in two versions(english and dutch)
                     tempDoc.Close()
-                else:
-                    self._split_File_(this_path,destinationFolder) # this split a file and save in two versions(english and dutch)         
+                elif this_path.endswith(('.docx')):
+                    self.__split_File__(this_path,destinationFolder) # this split a file and save in two versions(english and dutch)         
             wordApp.Quit()
         except Exception as e:
             print(e.args)
@@ -161,8 +163,71 @@ class wordDocumentWrapper(fileHandler):
             print(e.args)
         finally:
             return True
-    
+    def __column_matcher__(self, text, dic):
+        for k in dic:
+            if k == text:
+                return dic[k]
+        return -1 # if not match
+        
+    def convert_to_CSV(self, path):
+        
+        CSV_DELIMITER = "|"
+        HEADER_DIC = {'Profile':1, 'Industry Experience':2 , 'Skills & Competencies':3, 'Career Summary':4, 
+                       'Career History':5, 'Career History':6 , 'Business Skills': 7, 'IT Skills':8 , 'Languages':9,
+                       'Qualifications / Affiliations':10,'Skill Matrix ':11}
+        SKILL_MATRIC_DIC ={'Methods':1,'Techniques':2,'Platforms':3,'Tools':4,'Programming environments & Databases':5,'Themes & Markets':6}
+       
+        CSV_FIELD_NAMES = ['Profile', 'Industry Experience' , 'Skills & Competencies', 'Career Summary',
+                           'Career History', 'Career History' , 'Business Skills', 'IT Skills' , 'Languages',
+                           'Qualifications / Affiliations''Methods','Techniques','Platforms','Tools',
+                           'Programming environments & Databases','Themes & Markets']        
+        DATA_ROW_LIST = []
+        
+        full_file_paths = self.__get_list_paths__(path) 
+        
+        with open(os.path.abspath(os.path.join(path_dest, os.pardir)) + "\\Data_csv.csv", 'w', newline='') as csvFile:                    
+             csv_writer = csv.DictWriter(csvFile,fieldnames= CSV_FIELD_NAMES)
+             csv_writer.writeheader()
+        for this_path in full_file_paths:
+            if os.path.isfile(this_path) and this_path.endswith(('.docx')) and not this_path.startswith(('~')): # if file exist and not empty
+                doc = docx.Document(this_path)
+         
+                key_founded_list = []
+                current_key = ""
+                row_data_dic= {}
+                row_temp = ""
+                for key in HEADER_DIC.keys():
+                    for para in doc.paragraphs:
+                        if para.text == key:
+                            print(para.text)
+                            key_founded_list.append(key)
+                            if row_temp != "":
+                                row_data_dic[current_key] = row_temp
+                                row_temp= ""
+                            current_key = key
+#                            continue # go to the next paragraph
+                        elif(current_key in key_founded_list ):
+                            row_temp.join(" "+ para.text)
+                            row_data_dic[current_key] = str(row_data_dic.get(current_key)) + " " + row_temp
+                            
+                    if len(row_data_dic) > 0:
+                        DATA_ROW_LIST.append(row_data_dic)
 
+                            
+#            """this code is for looping in the skill matric """
+#            if len(doc.tables) > 0 :
+#                for table in doc.tables:
+#                    for row in table.rows:
+#                        for cell in row.cells:  
+#                            match = __column_matcher__(cell.text,HEADER_Dic)
+#                            if math == 11: # if matches the skill matrics
+#                               print(cell.text)
+       
+                
+        for row in DATA_ROW_LIST:
+            csv_writer.writerow(row)
+                       
+        
     
         
         
@@ -171,6 +236,9 @@ class wordDocumentWrapper(fileHandler):
 word_doc = wordDocumentWrapper('C:\\Users/mutabesham\\Documents')
 path = 'C:\\Users\\mutabesham\\Documents\\CVs'
 path_dest = 'C:\\Users\\mutabesham\\Documents\\CVs\\plited cvs'
+
+'''Decomment line below if the folder contain old version of words documnets'''
+#word_doc.upgrade_Doc_ToDocx(path)
 
 if word_doc.split_Files(path, path_dest):
      print("Files splited!")
